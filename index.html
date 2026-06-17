@@ -296,7 +296,7 @@ function dragonEvent(){
 function parseCSV(text){
  const rows=[];
  let row=[],cell="",inQuotes=false;
- text=String(text||"").replace(/^﻿/,"");
+ text=String(text||"").replace(/^\uFEFF/,"");
  for(let i=0;i<text.length;i++){
   const ch=text[i],next=text[i+1];
   if(ch==='"'){
@@ -304,12 +304,8 @@ function parseCSV(text){
    else inQuotes=!inQuotes;
   }else if(ch===',' && !inQuotes){
    row.push(cell.trim());cell="";
-  }else if((ch==='
-'||ch==='
-') && !inQuotes){
-   if(ch==='
-' && next==='
-')i++;
+  }else if((ch==='\n'||ch==='\r') && !inQuotes){
+   if(ch==='\r' && next==='\n')i++;
    row.push(cell.trim());
    if(row.some(x=>x!==""))rows.push(row);
    row=[];cell="";
@@ -323,9 +319,7 @@ function parseCSV(text){
 }
 function csvEscape(value){
  value=String(value??"");
- if(/[",
-
-]/.test(value))return '"'+value.replace(/"/g,'""')+'"';
+ if(/[",\n\r]/.test(value))return '"'+value.replace(/"/g,'""')+'"';
  return value;
 }
 function rowsToQuestions(rows){
@@ -348,8 +342,7 @@ function importCSVFromText(){
  if(!questions.length){alert("読み込める問題がありません。CSVの形を確認してください。");return;}
  state.original=questions;
  save();
- alert(`${questions.length}問を読み込みました${errors.length?`
-※${errors.length}行は読み込めませんでした`:""}`);
+ alert(`${questions.length}問を読み込みました${errors.length?`\n※${errors.length}行は読み込めませんでした`:""}`);
 }
 function loadCSVFile(){
  const file=$("csvFile").files[0];
@@ -364,8 +357,7 @@ function loadCSVFile(){
 function exportCSV(){
  const header=["問題文","選択肢1","選択肢2","選択肢3","選択肢4","正解番号"];
  const rows=state.original.map(x=>[x.q,x.a[0],x.a[1],x.a[2],x.a[3],x.c+1]);
- $("csvBox").value=[header,...rows].map(r=>r.map(csvEscape).join(",")).join("
-");
+ $("csvBox").value=[header,...rows].map(r=>r.map(csvEscape).join(",")).join("\n");
 }
 function clearOriginalQuestions(){
  if(confirm("自作問題をすべて空にしますか？")){
